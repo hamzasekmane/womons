@@ -76,6 +76,7 @@ const COLOR_MAP = {
   'steel blue': '#4682B4',
   'cornflower blue': '#6495ED',
   sapphire: '#0F52BA',
+  'peacock blue': '#005F73',
 
   // Reds
   red: '#C0392B',
@@ -91,10 +92,12 @@ const COLOR_MAP = {
   maroon: '#800000',
   burgundy: '#800020',
   wine: '#722F37',
+  'wine red': '#7F1D1D',
   oxblood: '#4A0000',
   rust: '#B7410E',
   terracotta: '#E2725B',
   merlot: '#73343A',
+  'rose red': '#B91C1C',
 
   // Pinks
   pink: '#E8C8D0',
@@ -111,6 +114,8 @@ const COLOR_MAP = {
   coral: '#FF7F50',
   peach: '#FFE5B4',
   'rose gold': '#B76E79',
+  'fluorescent pink': '#FF1493',
+  'neon pink': '#FF10F0',
 
   // Oranges
   orange: '#E65100',
@@ -121,6 +126,8 @@ const COLOR_MAP = {
   apricot: '#FBCEB1',
   pumpkin: '#FF7518',
   persimmon: '#EC5800',
+  'fluorescent orange': '#FF5F1F',
+  'neon orange': '#FF6700',
 
   // Yellows / Golds
   yellow: '#FDD835',
@@ -133,6 +140,8 @@ const COLOR_MAP = {
   gold: '#FFD700',
   golden: '#FFD700',
   amber: '#FFBF00',
+  'fluorescent yellow': '#CCFF00',
+  'neon yellow': '#DFFF00',
 
   // Greens
   green: '#558B2F',
@@ -159,6 +168,11 @@ const COLOR_MAP = {
   pistachio: '#93C572',
   khaki: '#C3B091',
   'khaki green': '#8A865D',
+  'fluorescent green': '#7CFC00',
+  'neon green': '#39FF14',
+  'highlighter green': '#7FFF00',
+  'bright green': '#00FF66',
+  'lime punch': '#B7FF00',
 
   // Purples
   purple: '#7B1FA2',
@@ -234,6 +248,7 @@ function colorToHex(colorValue) {
   if (raw.startsWith('#')) return raw;
   if (raw.startsWith('rgb')) return raw;
   if (raw.startsWith('hsl')) return raw;
+  if (raw.startsWith('linear-gradient')) return raw;
 
   const normalized = normalizeColorName(raw);
 
@@ -242,10 +257,6 @@ function colorToHex(colorValue) {
   const splitColors = normalized.split(/\/|,|&|\band\b/).map((c) => c.trim());
   const matched = splitColors.find((c) => COLOR_MAP[c]);
   if (matched) return COLOR_MAP[matched];
-
-  const tokens = normalized.split(' ');
-  const tokenMatch = tokens.find((token) => COLOR_MAP[token]);
-  if (tokenMatch) return COLOR_MAP[tokenMatch];
 
   const partialMatch = Object.keys(COLOR_MAP).find(
     (key) => normalized.includes(key) || key.includes(normalized),
@@ -318,6 +329,7 @@ function getProductColors(product) {
 
   return colorValues.map((val) => {
     const name = typeof val === 'string' ? val : val.name || String(val);
+
     return {
       name,
       hex: colorToHex(name),
@@ -346,7 +358,8 @@ export function ProductItem({product, loading}) {
 
   const compareAtPrice = product.compareAtPriceRange?.minVariantPrice;
   const hasSale =
-    compareAtPrice && Number(compareAtPrice.amount) > Number(minVariantPrice?.amount);
+    compareAtPrice &&
+    Number(compareAtPrice.amount) > Number(minVariantPrice?.amount);
 
   const discountPercent = hasSale
     ? Math.round(
@@ -356,7 +369,9 @@ export function ProductItem({product, loading}) {
       )
     : 0;
 
-  const normalizedTags = product.tags?.map((tag) => tag.toLowerCase().trim()) || [];
+  const normalizedTags =
+    product.tags?.map((tag) => tag.toLowerCase().trim()) || [];
+
   const isBestSeller =
     normalizedTags.includes('best-seller') ||
     normalizedTags.includes('best seller') ||
