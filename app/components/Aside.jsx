@@ -1,25 +1,11 @@
 import {createContext, useContext, useEffect, useState} from 'react';
 import {useId} from 'react';
 
-/**
- * A side bar component with Overlay
- * @example
- * ```jsx
- * <Aside type="search" heading="SEARCH">
- *  <input type="search" />
- *  ...
- * </Aside>
- * ```
- * @param {{
- *   children?: React.ReactNode;
- *   type: AsideType;
- *   heading: React.ReactNode;
- * }}
- */
 export function Aside({children, heading, type}) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
   const id = useId();
+
   useEffect(() => {
     const abortController = new AbortController();
 
@@ -48,7 +34,11 @@ export function Aside({children, heading, type}) {
       <aside>
         <header>
           <h3 id={id}>{heading}</h3>
-          <button className="close reset" onClick={close} aria-label="Close">
+          <button
+            className="close reset"
+            onClick={close}
+            aria-label="Close"
+          >
             &times;
           </button>
         </header>
@@ -85,12 +75,3 @@ export function useAside() {
 }
 
 /** @typedef {'search' | 'cart' | 'mobile' | 'closed'} AsideType */
-/**
- * @typedef {{
- *   type: AsideType;
- *   open: (mode: AsideType) => void;
- *   close: () => void;
- * }} AsideContextValue
- */
-
-/** @typedef {import('react').ReactNode} ReactNode */

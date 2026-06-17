@@ -1,123 +1,179 @@
+/*
+ * VALORAERPY — Base Reset
+ * Compatible with Tailwind CSS
+ *
+ * IMPORTANT:
+ * Do not add @import here.
+ * Google Fonts and Tailwind must be imported only in app.css.
+ */
+
+/* ─── Box sizing ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ─── Document ─── */
+html {
+  width: 100%;
+  min-height: 100%;
+}
+
 body {
   font-family:
+    Inter,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Open Sans',
-    'Helvetica Neue',
     sans-serif;
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #3D3227;
+  background: #FFFFFF;
 }
 
+/* ─── App/Main must be full-width ─── */
+body > main,
+main {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── Typography ─── */
 h1,
 h2,
+h3,
+h4,
+h5,
+h6,
 p {
   margin: 0;
   padding: 0;
 }
 
 h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 2rem;
-  margin-top: 2rem;
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 1rem;
-}
-
-h4 {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-h5 {
-  margin-bottom: 1rem;
-  margin-top: 0.5rem;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 p {
-  font-size: 1rem;
-  line-height: 1.4;
+  line-height: 1.65;
 }
 
+/* ─── Links ─── */
 a {
-  color: #000;
+  color: inherit;
   text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
-  cursor: pointer;
+  text-decoration: none;
 }
 
+/* ─── Dividers ─── */
 hr {
-  border-bottom: none;
-  border-top: 1px solid #000;
-  margin: 0;
+  border: none;
+  border-top: 1px solid rgba(61, 50, 39, 0.08);
+  margin: 1.5rem 0;
 }
 
+/* ─── Code ─── */
 pre {
   white-space: pre-wrap;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+code {
+  background: #F7F3EE;
+  border-radius: 6px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  padding: 0.15em 0.4em;
+  font-size: 0.875em;
+  color: #5C4D3C;
 }
 
-body > main {
-  margin: 0 1rem 1rem 1rem;
-}
-
+/* ─── Sections ─── */
 section {
-  padding: 1rem 0;
-  @media (min-width: 768px) {
-    padding: 2rem 0;
-  }
+  padding: 0;
 }
 
+/* ─── Forms ─── */
 fieldset {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.5rem;
-  padding: 1rem;
+  margin: 0 0 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(61, 50, 39, 0.1);
+  border-radius: 10px;
 }
 
 form {
   max-width: 100%;
-  @media (min-width: 768px) {
-    max-width: 400px;
-  }
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  border-radius: 10px;
+  border: 1.5px solid rgba(61, 50, 39, 0.12);
+  font-size: 0.9375rem;
+  padding: 0.625rem 0.875rem;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+  color: #3D3227;
+  background: #FFFFFF;
 }
 
 input {
-  border-radius: 4px;
-  border: 1px solid #000;
-  font-size: 1rem;
   margin-bottom: 0.5rem;
   margin-top: 0.25rem;
-  padding: 0.5rem;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #A89279;
+  box-shadow: 0 0 0 3px rgba(168, 146, 121, 0.15);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #A89279;
 }
 
 legend {
   font-weight: 600;
   margin-bottom: 0.5rem;
+  font-size: 0.875rem;
 }
 
-ul {
+/* ─── Lists ─── */
+ul,
+ol {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -131,9 +187,45 @@ dl {
   margin: 0.5rem 0;
 }
 
-code {
-  background: #ddd;
-  border-radius: 4px;
-  font-family: monospace;
-  padding: 0.25rem;
+/* ─── Media ─── */
+img,
+picture,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+/* img {
+  height: auto;
+} */
+
+/* ─── Buttons ─── */
+button {
+  cursor: pointer;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: rgba(168, 146, 121, 0.2);
+  color: #3D3227;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(61, 50, 39, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 50, 39, 0.25);
 }
