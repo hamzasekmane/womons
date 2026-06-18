@@ -47,21 +47,21 @@ export function meta() {
     {
       name: 'description',
       content:
-        'Discover VALORAERPY premium fashion, refined essentials, luxury accessories, and timeless pieces designed for everyday elegance.',
+        'Discover VALORA premium fashion, refined essentials, luxury accessories, and timeless pieces designed for everyday elegance.',
     },
     {property: 'og:type', content: 'website'},
     {property: 'og:title', content: 'VALORAERPY | Premium Fashion & Accessories'},
     {
       property: 'og:description',
       content:
-        'Discover VALORAERPY premium fashion, refined essentials, luxury accessories, and timeless pieces designed for everyday elegance.',
+        'Discover VALORA premium fashion, refined essentials, luxury accessories, and timeless pieces designed for everyday elegance.',
     },
     {name: 'twitter:card', content: 'summary_large_image'},
-    {name: 'twitter:title', content: 'VALORAERPY | Premium Fashion & Accessories'},
+    {name: 'twitter:title', content: 'VALORA | Premium Fashion & Accessories'},
     {
       name: 'twitter:description',
       content:
-        'Discover VALORAERPY premium fashion, refined essentials, luxury accessories, and timeless pieces designed for everyday elegance.',
+        'Discover VALORA premium fashion, refined essentials, luxury accessories, and timeless pieces designed for everyday elegance.',
     },
   ];
 }
@@ -206,7 +206,7 @@ export function ErrorBoundary() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>{is404 ? 'Page Not Found | VALORAERPY' : 'Error | VALORAERPY'}</title>
+        <title>{is404 ? 'Page Not Found | VALORA' : 'Error | VALORA'}</title>
         <Meta />
         <Links />
       </head>
