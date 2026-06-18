@@ -9,10 +9,39 @@ import {MockShopNotice} from '~/components/MockShopNotice';
    ═══════════════════════════════════════════════════════════════ */
 
 export const meta = () => [
-  {title: 'VALORAERPY | Premium Fashion & Accessories'},
-  {name: 'description', content: 'Curated luxury fashion. Free shipping over $75.'},
-  {property: 'og:title', content: 'VALORAERPY | Premium Fashion & Accessories'},
-  {property: 'og:image', content: 'https://yourdomain.com/og-image.jpg'},
+  { title: "VALORAERPY | Premium Fashion & Accessories - Luxury Designer Clothing" },
+  { name: "description", content: "Discover VALORAERPY's premium collection of luxury fashion, designer clothing, handbags, shoes, and accessories. Free shipping on orders over $150. Shop the latest trends in high-end fashion." },
+  { name: "keywords", content: "premium fashion, luxury clothing, designer accessories, high-end fashion, designer handbags, luxury shoes, premium apparel, fashion boutique, VALORAERPY, luxury brand" },
+  { name: "author", content: "VALORAERPY" },
+  { name: "robots", content: "index, follow" },
+  { name: "language", content: "English" },
+  { name: "revisit-after", content: "7 days" },
+  
+  // Open Graph (Facebook)
+  { property: "og:type", content: "website" },
+  { property: "og:title", content: "VALORAERPY | Premium Fashion & Accessories" },
+  { property: "og:description", content: "Shop luxury designer fashion, clothing, handbags, and accessories at VALORAERPY. Premium quality meets contemporary style." },
+  { property: "og:image", content: "https://valoraerpy.com/og-image.jpg" },
+  { property: "og:url", content: "https://valoraerpy.com" },
+  { property: "og:site_name", content: "VALORAERPY" },
+  { property: "og:locale", content: "en_US" },
+  
+  // Twitter Card
+  { name: "twitter:card", content: "summary_large_image" },
+  { name: "twitter:title", content: "VALORAERPY | Premium Fashion & Accessories" },
+  { name: "twitter:description", content: "Discover luxury fashion & designer accessories. Shop the latest premium collection at VALORAERPY." },
+  { name: "twitter:image", content: "https://valoraerpy.com/twitter-card.jpg" },
+  { name: "twitter:site", content: "@valoraerpy" },
+  { name: "twitter:creator", content: "@valoraerpy" },
+  
+  // Additional SEO
+  { name: "theme-color", content: "#000000" },
+  { name: "apple-mobile-web-app-capable", content: "yes" },
+  { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+  { name: "format-detection", content: "telephone=no" },
+  
+  // Canonical
+  { tagName: "link", rel: "canonical", href: "https://valoraerpy.com" }
 ];
 
 export async function loader(args) {
