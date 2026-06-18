@@ -1,6 +1,7 @@
 import {useLoaderData, Link} from 'react-router';
 import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {motion} from 'framer-motion';
 
 const FEATURED_HANDLES = ['new-arrivals', 'clothing', 'sale'];
 
@@ -8,8 +9,12 @@ function isFeatured(handle) {
   return FEATURED_HANDLES.includes(handle);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   META & LOADER
+   ═══════════════════════════════════════════════════════════════ */
+
 export const meta = () => {
-  return [{title: 'VALORA | Collections'}];
+  return [{title: 'VALORAERPY | Collections'}];
 };
 
 export async function loader(args) {
@@ -19,14 +24,10 @@ export async function loader(args) {
 }
 
 async function loadCriticalData({context, request}) {
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 24,
-  });
-
+  const paginationVariables = getPaginationVariables(request, {pageBy: 24});
   const {collections} = await context.storefront.query(COLLECTIONS_QUERY, {
     variables: paginationVariables,
   });
-
   return {collections};
 }
 
@@ -34,15 +35,19 @@ function loadDeferredData() {
   return {};
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PAGE COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
+
 export default function Collections() {
   const {collections} = useLoaderData();
 
-  // فلترة المجموعات المخفية
+  // Filter out hidden collections
   const visibleCollections = collections.nodes.filter(
     (c) => c.handle !== 'frontpage' && c.handle !== 'hidden',
   );
 
-  // ترتيب: featured أولاً ثم الباقي
+  // Sort: Featured first, then the rest
   const sortedCollections = [...visibleCollections].sort((a, b) => {
     const aF = isFeatured(a.handle);
     const bF = isFeatured(b.handle);
@@ -51,57 +56,46 @@ export default function Collections() {
     return 0;
   });
 
-  // المجموعات المميزة
   const featuredCollections = sortedCollections.filter((c) => isFeatured(c.handle));
   const regularCollections = sortedCollections.filter((c) => !isFeatured(c.handle));
 
   return (
-    <div className="min-h-screen bg-white text-[#1B2A3D]">
-      {/* Header */}
-      <section className="border-b border-[#1B2A3D]/10 bg-[#F7F4F0]">
-        <div className="mx-auto max-w-[1440px] px-6 py-14 sm:px-10 sm:py-20">
-          <div
-            className="mb-4 flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[#1B2A3D]/40"
-            style={{fontFamily: 'sans-serif'}}
-          >
-            <Link to="/" className="transition-colors hover:text-[#1B2A3D]">
-              Home
-            </Link>
+    <div className="min-h-screen bg-[#FAFAFA] text-black selection:bg-black selection:text-white">
+      {/* Animated Header Section */}
+      <motion.section 
+        initial={{opacity: 0, y: -20}} 
+        animate={{opacity: 1, y: 0}} 
+        transition={{duration: 0.8, ease: [0.16, 1, 0.3, 1]}}
+        className="border-b border-gray-200 bg-white"
+      >
+        <div className="mx-auto max-w-[1600px] px-6 py-16 sm:px-12 sm:py-24">
+          <div className="mb-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">
+            <Link to="/" className="transition-colors hover:text-black">Home</Link>
             <span>/</span>
-            <span>Collections</span>
+            <span className="text-black">Collections</span>
           </div>
 
-          <h1
-            className="mb-4 text-4xl font-light tracking-tight text-[#1B2A3D] sm:text-6xl"
-            style={{fontFamily: "'Cormorant Garamond', Georgia, serif"}}
-          >
+          <h1 className="mb-6 text-5xl font-light tracking-tight text-black sm:text-7xl font-serif">
             Collections
           </h1>
 
-          <p
-            className="max-w-xl text-sm leading-relaxed text-[#1B2A3D]/55"
-            style={{fontFamily: 'sans-serif'}}
-          >
-            Explore curated edits of premium fashion, timeless essentials, and
-            accessories designed for everyday luxury.
+          <p className="max-w-2xl text-base font-light leading-relaxed text-gray-500 sm:text-lg font-sans">
+            Explore curated edits of premium fashion, timeless essentials, and accessories designed for everyday luxury.
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* Featured Collections */}
-      {featuredCollections.length > 0 ? (
-        <section className="mx-auto max-w-[1440px] px-6 pt-12 sm:px-10 sm:pt-16">
-          <div className="mb-6 flex items-center gap-3">
-            <p
-              className="text-[11px] uppercase tracking-[0.25em] text-[#1B2A3D]/40"
-              style={{fontFamily: 'sans-serif'}}
-            >
-              Featured
+      {featuredCollections.length > 0 && (
+        <section className="mx-auto max-w-[1600px] px-6 pt-16 sm:px-12 sm:pt-24">
+          <div className="mb-10 flex items-center gap-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 font-sans">
+              Featured Edits
             </p>
-            <div className="h-px flex-1 bg-[#1B2A3D]/10" />
+            <div className="h-px flex-1 bg-gray-200" />
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
             {featuredCollections.map((collection, index) => (
               <CollectionItem
                 key={collection.id}
@@ -112,38 +106,26 @@ export default function Collections() {
             ))}
           </div>
         </section>
-      ) : null}
+      )}
 
       {/* All Collections */}
-      <section className="mx-auto max-w-[1440px] px-6 py-12 sm:px-10 sm:py-16">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <section className="mx-auto max-w-[1600px] px-6 py-16 sm:px-12 sm:py-24">
+        <div className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b border-gray-200 pb-6">
           <div>
-            <p
-              className="mb-2 text-[11px] uppercase tracking-[0.25em] text-[#1B2A3D]/40"
-              style={{fontFamily: 'sans-serif'}}
-            >
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 font-sans">
               Explore
             </p>
-
-            <h2
-              className="text-3xl font-light text-[#1B2A3D] sm:text-4xl"
-              style={{fontFamily: "'Cormorant Garamond', Georgia, serif"}}
-            >
+            <h2 className="text-3xl font-light text-black sm:text-4xl font-serif">
               Shop by Collection
             </h2>
-
-            <p
-              className="mt-2 text-xs text-[#1B2A3D]/45"
-              style={{fontFamily: 'sans-serif'}}
-            >
-              {regularCollections.length} collections
+            <p className="mt-3 text-xs font-medium text-gray-500 font-sans uppercase tracking-widest">
+              {regularCollections.length} Collections
             </p>
           </div>
 
           <Link
             to="/collections/all"
-            className="text-xs font-semibold uppercase tracking-[0.15em] text-[#1B2A3D]/45 transition-colors hover:text-[#1B2A3D]"
-            style={{fontFamily: 'sans-serif'}}
+            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500 transition-colors hover:text-black"
           >
             View All Products →
           </Link>
@@ -151,17 +133,12 @@ export default function Collections() {
 
         {regularCollections.length === 0 ? (
           <div className="py-20 text-center">
-            <p
-              className="text-sm text-[#1B2A3D]/45"
-              style={{fontFamily: 'sans-serif'}}
-            >
-              No collections available yet.
-            </p>
+            <p className="text-sm font-light text-gray-500">No collections available yet.</p>
           </div>
         ) : (
           <PaginatedResourceSection
             connection={collections}
-            resourcesClassName="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            resourcesClassName="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
           >
             {({node: collection, index}) =>
               !isFeatured(collection.handle) ? (
@@ -179,6 +156,10 @@ export default function Collections() {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COLLECTION CARD (ANIMATED & LUXURY UI)
+   ═══════════════════════════════════════════════════════════════ */
+
 function CollectionItem({collection, index, large = false}) {
   const image = collection.image;
   const subtitle = getCollectionSubtitle(collection.handle, collection.title);
@@ -186,143 +167,78 @@ function CollectionItem({collection, index, large = false}) {
   const productCount = collection.products?.nodes?.length || 0;
 
   return (
-    <Link
-      to={`/collections/${collection.handle}`}
-      prefetch="intent"
-      className="group relative block overflow-hidden bg-[#F5F1ED]"
-      style={{
-        aspectRatio: large ? '16/9' : '4/5',
-        borderRadius: '16px',
-      }}
+    <motion.div
+      initial={{opacity: 0, y: 30}}
+      whileInView={{opacity: 1, y: 0}}
+      viewport={{once: true, margin: "-50px"}}
+      transition={{duration: 0.6, delay: (index % 10) * 0.05, ease: [0.21, 0.47, 0.32, 0.98]}}
+      className={`group relative block overflow-hidden rounded-[24px] bg-gray-100 ${large ? 'aspect-[4/5] sm:aspect-[16/9]' : 'aspect-[4/5]'}`}
     >
-      {image ? (
-        <Image
-          alt={image.altText || collection.title}
-          data={image}
-          loading={index < 3 ? 'eager' : 'lazy'}
-          sizes={
-            large
-              ? '(min-width: 1024px) 50vw, 100vw'
-              : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
-          }
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#F5F1ED] to-[#E8DDD0]">
-          <span
-            className="text-xs uppercase tracking-[0.18em] text-[#1B2A3D]/35"
-            style={{fontFamily: 'sans-serif'}}
-          >
-            No Image
+      <Link to={`/collections/${collection.handle}`} prefetch="intent" className="block h-full w-full">
+        {image ? (
+          <Image
+            alt={image.altText || collection.title}
+            data={image}
+            loading={index < 3 ? 'eager' : 'lazy'}
+            sizes={large ? '(min-width: 1024px) 50vw, 100vw' : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'}
+            className="h-full w-full object-cover transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gray-100">
+            <span className="text-xs uppercase tracking-widest text-gray-400">No Image</span>
+          </div>
+        )}
+
+        {/* Cinematic Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-700 group-hover:opacity-90" />
+
+        {/* Top Badges */}
+        <div className="absolute left-6 top-6 flex flex-col items-start gap-3">
+          {featured ? (
+            <span className="rounded-full bg-[#C4956A] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-md">
+              ★ Featured
+            </span>
+          ) : (
+            <span className="rounded-full bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+              Collection
+            </span>
+          )}
+
+          {productCount > 0 && (
+            <span className="rounded-full bg-black/40 backdrop-blur-sm px-3 py-1.5 text-[9px] font-semibold tracking-[0.1em] text-white/90">
+              {productCount}+ Items
+            </span>
+          )}
+        </div>
+
+        {/* Hover Spinning Action Button */}
+        <div className="absolute right-6 top-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md text-2xl font-light text-black shadow-lg transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-90">
+          +
+        </div>
+
+        {/* Bottom Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-center sm:p-10">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">
+            {subtitle || 'Shop Now'}
+          </p>
+
+          <h3 className="mb-4 text-4xl font-light leading-tight text-white sm:text-5xl font-serif">
+            {collection.title}
+          </h3>
+
+          {collection.description && (
+            <p className="mx-auto mb-8 line-clamp-2 max-w-sm text-sm font-light leading-relaxed text-white/80 font-sans">
+              {collection.description}
+            </p>
+          )}
+
+          {/* Magnetic Hover Button */}
+          <span className="inline-block rounded-full bg-white px-8 py-3.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-black transition-all duration-400 group-hover:bg-black group-hover:text-white group-hover:tracking-[0.25em]">
+            View Collection
           </span>
         </div>
-      )}
-
-      <div
-        className="absolute inset-0 transition-all duration-300 group-hover:bg-black/30"
-        style={{
-          background:
-            'linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0.06) 100%)',
-        }}
-      />
-
-      <div className="absolute left-5 top-5 flex flex-col gap-2">
-        {featured ? (
-          <span
-            className="inline-flex items-center rounded-full px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white"
-            style={{
-              background: 'rgba(180,140,80,0.85)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              fontFamily: 'sans-serif',
-            }}
-          >
-            ★ Featured
-          </span>
-        ) : (
-          <span
-            className="inline-flex items-center rounded-full px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white"
-            style={{
-              background: 'rgba(30,20,16,0.45)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              fontFamily: 'sans-serif',
-            }}
-          >
-            Collection
-          </span>
-        )}
-
-        {productCount > 0 ? (
-          <span
-            className="inline-flex w-fit items-center rounded-full px-3 py-1 text-[10px] font-semibold tracking-wider text-white/85"
-            style={{
-              background: 'rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(8px)',
-              fontFamily: 'sans-serif',
-            }}
-          >
-            {productCount}+ items
-          </span>
-        ) : null}
-      </div>
-
-      <div
-        className="absolute right-5 top-5 flex h-[44px] w-[44px] items-center justify-center rounded-full text-2xl font-light text-[#1B2A3D] transition-all duration-300 group-hover:rotate-90"
-        style={{
-          background: 'rgba(248,242,237,0.92)',
-          backdropFilter: 'blur(8px)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-          lineHeight: 1,
-        }}
-      >
-        +
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 px-6 pb-8 text-center">
-        {subtitle ? (
-          <p
-            className="mb-2 text-[10px] uppercase tracking-[0.28em] text-white/55"
-            style={{fontFamily: 'sans-serif'}}
-          >
-            {subtitle}
-          </p>
-        ) : (
-          <p
-            className="mb-2 text-[10px] uppercase tracking-[0.28em] text-white/55"
-            style={{fontFamily: 'sans-serif'}}
-          >
-            Shop Now
-          </p>
-        )}
-
-        <h3
-          className="mb-5 text-3xl font-light italic leading-tight text-white sm:text-4xl"
-          style={{fontFamily: "'Cormorant Garamond', Georgia, serif"}}
-        >
-          {collection.title}
-        </h3>
-
-        {collection.description ? (
-          <p
-            className="mx-auto mb-6 line-clamp-2 max-w-sm text-sm leading-relaxed text-white/65"
-            style={{fontFamily: 'sans-serif'}}
-          >
-            {collection.description}
-          </p>
-        ) : null}
-
-        <span
-          className="inline-flex items-center justify-center px-8 py-3 text-xs font-semibold uppercase tracking-widest text-[#1B2A3D] transition-all group-hover:bg-[#1B2A3D] group-hover:text-white"
-          style={{
-            background: 'white',
-            fontFamily: 'sans-serif',
-          }}
-        >
-          View Collection
-        </span>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -335,8 +251,8 @@ function getCollectionSubtitle(handle, title) {
   if (h.includes('clothing') || h.includes('clothes') || t.includes('clothing')) return 'Wardrobe Edit';
   if (h.includes('bag') || t.includes('bag')) return 'Carry Essentials';
   if (h.includes('watch') || t.includes('watch')) return 'Timepieces';
-  if (h.includes('jewel') || t.includes('jewel')) return 'Jewelry';
-  if (h.includes('beauty') || t.includes('beauty')) return 'Beauty';
+  if (h.includes('jewel') || t.includes('jewel')) return 'Fine Jewelry';
+  if (h.includes('beauty') || t.includes('beauty')) return 'Beauty & Care';
   if (h.includes('accessor') || t.includes('accessor')) return 'Accessories';
   if (h.includes('top') || t.includes('top')) return 'Tops';
   if (h.includes('bottom') || t.includes('bottom')) return 'Bottoms';
@@ -345,7 +261,10 @@ function getCollectionSubtitle(handle, title) {
   return null;
 }
 
-// ⭐ fragment بدون featured
+/* ═══════════════════════════════════════════════════════════════
+   GRAPHQL
+   ═══════════════════════════════════════════════════════════════ */
+
 const COLLECTIONS_QUERY = `#graphql
   fragment Collection on Collection {
     id

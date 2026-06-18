@@ -2,14 +2,8 @@ import {redirect} from 'react-router';
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.
- *
- * Expected URL structure:
- * /cart/<variant_id>:<quantity>
- *
- * Multiple variants:
- * /cart/41007289663544:1,41007289696312:2?discount=HYDROBOARD
- *
- * @param {Route.LoaderArgs}
+ * Expected URL structure: /cart/<variant_id>:<quantity>
+ * Multiple variants: /cart/41007289663544:1,41007289696312:2?discount=HYDROBOARD
  */
 export async function loader({request, context, params}) {
   const {cart} = context;
@@ -42,11 +36,10 @@ export async function loader({request, context, params}) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-
   const discount = searchParams.get('discount');
   const discountArray = discount ? [discount] : [];
 
-  // Create cart
+  // Create Cart
   const result = await cart.create({
     lines: linesMap,
     discountCodes: discountArray,
@@ -55,9 +48,7 @@ export async function loader({request, context, params}) {
   const cartResult = result.cart;
 
   if (result.errors?.length || !cartResult) {
-    throw new Response('Link may be expired. Try checking the URL.', {
-      status: 410,
-    });
+    throw new Response('Link may be expired. Try checking the URL.', {status: 410});
   }
 
   // Update cart id in cookie
@@ -72,8 +63,5 @@ export async function loader({request, context, params}) {
 }
 
 export default function Component() {
-  return null;
+  return null; // This route handles redirects only, no UI.
 }
-
-/** @typedef {import('./+types/cart.$lines').Route} Route */
-/** @typedef {ReturnType<typeof useLoaderData<typeof loader>>} LoaderReturnData */

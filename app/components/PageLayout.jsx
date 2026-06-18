@@ -9,6 +9,7 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import {motion} from 'framer-motion';
 
 /**
  * @param {PageLayoutProps}
@@ -39,7 +40,9 @@ export function PageLayout({
         />
       ) : null}
 
-      <main>{children}</main>
+      <main className="bg-[#FAFAFA] min-h-screen selection:bg-black selection:text-white">
+        {children}
+      </main>
 
       <Suspense
         fallback={
@@ -73,11 +76,6 @@ export function PageLayout({
 
 /**
  * Footer fallback while loading/error
- *
- * @param {{
- *   header: PageLayoutProps['header'];
- *   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
- * }}
  */
 function FooterFallback({header, publicStoreDomain}) {
   return (
@@ -90,11 +88,11 @@ function FooterFallback({header, publicStoreDomain}) {
 }
 
 /**
- * @param {{cart: PageLayoutProps['cart']}}
+ * Cart Aside Wrapper
  */
 function CartAside({cart}) {
   return (
-    <Aside type="cart" heading="CART">
+    <Aside type="cart" heading="SHOPPING BAG">
       <Suspense fallback={<CartLoading />}>
         <Await resolve={cart} errorElement={<CartError />}>
           {(resolvedCart) => (
@@ -108,104 +106,106 @@ function CartAside({cart}) {
 
 function CartLoading() {
   return (
-    <div className="px-4 py-6">
-      <p className="text-sm text-slate-500">Loading cart...</p>
+    <div className="flex h-full flex-col items-center justify-center px-6 py-20 text-center">
+      <motion.div
+        animate={{opacity: [0.3, 1, 0.3]}}
+        transition={{repeat: Infinity, duration: 1.5, ease: "easeInOut"}}
+        className="text-[10px] font-bold uppercase tracking-[0.3em] text-black"
+      >
+        Loading Bag...
+      </motion.div>
     </div>
   );
 }
 
 function CartError() {
   return (
-    <div className="px-4 py-6">
-      <p className="text-sm text-slate-500">
+    <div className="flex h-full flex-col items-center justify-center px-6 py-20 text-center">
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-red-800">
         Your cart could not be loaded.
       </p>
     </div>
   );
 }
 
+/**
+ * Predictive Search Aside (Luxury Editorial UI)
+ */
 function SearchAside() {
   const queriesDatalistId = useId();
 
   return (
     <Aside type="search" heading="SEARCH">
-      <div className="predictive-search">
-        <div className="pt-4">
+      <div className="predictive-search flex h-full flex-col">
+        {/* Search Header Form */}
+        <div className="px-6 pt-8 pb-4">
           <SearchFormPredictive>
             {({fetchResults, goToSearch, inputRef}) => (
-              <div className="flex items-center gap-2 px-4">
-                <div className="flex flex-1 items-center gap-0 rounded-xl border border-slate-200 bg-slate-50 transition-all focus-within:border-[#1B2A3D] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B2A3D]/10">
-                  <div className="flex items-center pl-3 text-slate-400">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                      />
-                    </svg>
-                  </div>
-
-                  <input
-                    name="q"
-                    onChange={fetchResults}
-                    onFocus={fetchResults}
-                    placeholder="Search products..."
-                    ref={inputRef}
-                    type="search"
-                    list={queriesDatalistId}
-                    autoComplete="off"
-                    className="flex-1 border-none bg-transparent px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-                </div>
-
+              <div className="group relative flex items-center border-b border-gray-200 pb-3 transition-colors focus-within:border-black">
+                <input
+                  name="q"
+                  onChange={fetchResults}
+                  onFocus={fetchResults}
+                  placeholder="WHAT ARE YOU LOOKING FOR?"
+                  ref={inputRef}
+                  type="search"
+                  list={queriesDatalistId}
+                  autoComplete="off"
+                  className="w-full bg-transparent text-xl font-light text-black placeholder-gray-300 outline-none font-serif sm:text-2xl"
+                />
+                
                 <button
                   type="button"
                   onClick={goToSearch}
-                  className="rounded-lg bg-[#1B2A3D] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#26384f]"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full p-2 text-gray-400 transition-colors hover:text-black"
+                  aria-label="Search"
                 >
-                  Search
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
                 </button>
               </div>
             )}
           </SearchFormPredictive>
         </div>
 
-        <div className="mt-4 max-h-[calc(100vh-160px)] overflow-y-auto px-4">
+        {/* Search Results Area */}
+        <div className="flex-1 overflow-y-auto px-6 hide-scroll">
           <SearchResultsPredictive>
             {({items, total, term, state, closeSearch}) => {
-              const {
-                articles,
-                collections,
-                pages,
-                products,
-                queries,
-              } = items;
-
+              const {articles, collections, pages, products, queries} = items;
               const currentTerm = term.current?.trim() || '';
 
               if (!currentTerm) {
                 return (
-                  <div className="py-10 text-center">
-                    <p className="text-sm text-slate-400">
-                      Start typing to search products, pages, and collections.
+                  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="py-20 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                      Type to discover products & collections.
                     </p>
-                  </div>
+                  </motion.div>
                 );
               }
 
               if (state === 'loading') {
                 return (
-                  <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600" />
-                    Searching...
-                  </div>
+                  <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="flex flex-col items-center justify-center gap-4 py-16">
+                    <div className="h-px w-16 overflow-hidden bg-gray-100">
+                      <motion.div
+                        animate={{x: ['-100%', '100%']}}
+                        transition={{repeat: Infinity, duration: 1.2, ease: 'easeInOut'}}
+                        className="h-full w-full bg-black"
+                      />
+                    </div>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400">
+                      Searching...
+                    </span>
+                  </motion.div>
                 );
               }
 
@@ -214,46 +214,24 @@ function SearchAside() {
               }
 
               return (
-                <>
-                  <SearchResultsPredictive.Queries
-                    queries={queries}
-                    queriesDatalistId={queriesDatalistId}
-                  />
+                <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} transition={{duration: 0.4}}>
+                  <SearchResultsPredictive.Queries queries={queries} queriesDatalistId={queriesDatalistId} />
+                  <SearchResultsPredictive.Products products={products} closeSearch={closeSearch} term={term} />
+                  <SearchResultsPredictive.Collections collections={collections} closeSearch={closeSearch} term={term} />
+                  <SearchResultsPredictive.Pages pages={pages} closeSearch={closeSearch} term={term} />
+                  <SearchResultsPredictive.Articles articles={articles} closeSearch={closeSearch} term={term} />
 
-                  <SearchResultsPredictive.Products
-                    products={products}
-                    closeSearch={closeSearch}
-                    term={term}
-                  />
-
-                  <SearchResultsPredictive.Collections
-                    collections={collections}
-                    closeSearch={closeSearch}
-                    term={term}
-                  />
-
-                  <SearchResultsPredictive.Pages
-                    pages={pages}
-                    closeSearch={closeSearch}
-                    term={term}
-                  />
-
-                  <SearchResultsPredictive.Articles
-                    articles={articles}
-                    closeSearch={closeSearch}
-                    term={term}
-                  />
-
-                  <Link
-                    onClick={closeSearch}
-                    to={`${SEARCH_ENDPOINT}?q=${encodeURIComponent(
-                      currentTerm,
-                    )}`}
-                    className="mt-4 flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-                  >
-                    View all results for &ldquo;{currentTerm}&rdquo; →
-                  </Link>
-                </>
+                  <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pb-8 pt-4">
+                    <Link
+                      onClick={closeSearch}
+                      to={`${SEARCH_ENDPOINT}?q=${encodeURIComponent(currentTerm)}`}
+                      className="group flex w-full items-center justify-center gap-3 rounded-full bg-black px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white transition-all hover:bg-gray-900 hover:gap-5"
+                    >
+                      View all results
+                      <span className="transition-transform">→</span >
+                    </Link>
+                  </div>
+                </motion.div>
               );
             }}
           </SearchResultsPredictive>
@@ -264,27 +242,22 @@ function SearchAside() {
 }
 
 /**
- * @param {{
- *   header: PageLayoutProps['header'];
- *   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
- * }}
+ * Mobile Menu Aside
  */
 function MobileMenuAside({header, publicStoreDomain}) {
-  if (!header?.menu) {
-    return null;
-  }
-
-  const primaryDomainUrl =
-    header?.shop?.primaryDomain?.url || publicStoreDomain || '';
+  if (!header?.menu) return null;
+  const primaryDomainUrl = header?.shop?.primaryDomain?.url || publicStoreDomain || '';
 
   return (
     <Aside type="mobile" heading="MENU">
-      <HeaderMenu
-        menu={header.menu}
-        viewport="mobile"
-        primaryDomainUrl={primaryDomainUrl}
-        publicStoreDomain={publicStoreDomain}
-      />
+      <div className="h-full overflow-y-auto px-6 py-8">
+        <HeaderMenu
+          menu={header.menu}
+          viewport="mobile"
+          primaryDomainUrl={primaryDomainUrl}
+          publicStoreDomain={publicStoreDomain}
+        />
+      </div>
     </Aside>
   );
 }

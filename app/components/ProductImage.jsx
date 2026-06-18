@@ -1,6 +1,7 @@
 import {useState, useRef, useEffect, useCallback} from 'react';
 import {Link, useLocation} from 'react-router';
 import {Image} from '@shopify/hydrogen';
+import {motion, AnimatePresence} from 'framer-motion';
 
 /**
  * @param {{
@@ -42,6 +43,9 @@ export function ProductImage({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const touchStartRef = useRef(0);
+  const touchEndRef = useRef(0);
+
   // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
@@ -80,13 +84,14 @@ export function ProductImage({
     if (!lightboxOpen) return;
     const handler = (e) => {
       if (e.key === 'Escape') setLightboxOpen(false);
-      if (e.key === 'ArrowRight') { goNext(); /* update lightbox logic or keep separate */ }
+      if (e.key === 'ArrowRight') goNext();
       if (e.key === 'ArrowLeft') goPrev();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [lightboxOpen, goNext, goPrev]);
 
+  // Cinematic Zoom tracking
   const handleMouseMove = (e) => {
     if (!isZoomed || !mainRef.current) return;
     const rect = mainRef.current.getBoundingClientRect();
@@ -96,13 +101,24 @@ export function ProductImage({
     });
   };
 
-  const currentImage = allImages[activeIndex];
+  // Mobile Swipe Logic
+  const handleTouchStart = (e) => {
+    touchStartRef.current = e.touches[0].clientX;
+    touchEndRef.current = e.touches[0].clientX;
+  };
+  const handleTouchMove = (e) => { touchEndRef.current = e.touches[0].clientX; };
+  const handleTouchEnd = () => {
+    const diff = touchStartRef.current - touchEndRef.current;
+    if (Math.abs(diff) > 50) { diff > 0 ? goNext() : goPrev(); }
+    touchStartRef.current = 0;
+    touchEndRef.current = 0;
+  };
 
   if (!allImages.length) {
     return (
-      <div className="relative w-full overflow-hidden rounded-sm bg-[#F5F1ED]" style={{aspectRatio: '3 / 4'}}>
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#F5F1ED] to-[#E8DDD0]">
-          <span className="text-xs uppercase tracking-[0.18em] text-[#1B2A3D]/35">
+      <div className="relative w-full overflow-hidden rounded-[24px] bg-gray-100 aspect-[4/5] lg:h-[85vh]">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs uppercase tracking-widest text-gray-400">
             No Image Available
           </span>
         </div>
@@ -112,31 +128,31 @@ export function ProductImage({
 
   return (
     <>
-      <div className="flex flex-col-reverse gap-2 lg:flex-row lg:gap-3">
+      <div className="flex flex-col-reverse gap-4 lg:flex-row h-full">
         
         {/* Thumbnails */}
         {allImages.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 lg:max-h-[700px] lg:flex-col lg:overflow-y-auto scrollbar-hide lg:pb-0 lg:pr-1">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide lg:flex-col lg:overflow-y-auto lg:pb-0">
             {allImages.map((img, i) => (
               <button
                 key={img?.id || i}
                 type="button"
                 onClick={() => goTo(i)}
-                className={`h-20 w-16 flex-shrink-0 overflow-hidden transition-all duration-300 lg:h-[90px] lg:w-[72px] ${
+                className={`relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-xl transition-all duration-400 lg:h-[120px] lg:w-[96px] ${
                   activeIndex === i
-                    ? 'ring-2 ring-[#1B2A3D] opacity-100'
-                    : 'ring-1 ring-[#1B2A3D]/10 opacity-60 hover:opacity-90 hover:ring-[#1B2A3D]/30'
+                    ? 'ring-1 ring-black ring-offset-2'
+                    : 'opacity-60 hover:opacity-100 hover:scale-105'
                 }`}
               >
                 {img ? (
                   <Image
                     data={img}
                     alt={`${productTitle} view ${i + 1}`}
-                    sizes="72px"
+                    sizes="96px"
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full bg-[#E8DDD0]" />
+                  <div className="h-full w-full bg-gray-200" />
                 )}
               </button>
             ))}
@@ -144,43 +160,45 @@ export function ProductImage({
         )}
 
         {/* Main Image Area */}
-        <div className="group relative flex-1">
+        <div className="group relative flex-1 overflow-hidden rounded-[24px] bg-gray-100 aspect-[4/5] lg:aspect-auto lg:h-[85vh]">
           <div
             ref={mainRef}
-            className={`relative overflow-hidden bg-[#F5F1ED] ${
-              isMobile ? '' : isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
-            }`}
-            style={{aspectRatio: '3 / 4'}}
-            onClick={() => {
-              if (isMobile) return;
-              setIsZoomed((prev) => !prev);
-            }}
+            className={`absolute inset-0 h-full w-full ${isMobile ? '' : isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            onClick={() => { if (!isMobile) setIsZoomed(!isZoomed); }}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setIsZoomed(false)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            {/* Main Image with smooth transition */}
-            <div
-              key={currentImage?.id || activeIndex}
-              className="absolute inset-0 animate-fadeIn"
-              style={{
-                transform: isZoomed ? 'scale(2.5)' : 'scale(1)',
-                transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                transition: 'transform 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              }}
-            >
-              {currentImage ? (
-                <Image
-                  data={currentImage}
-                  alt={currentImage.altText || productTitle}
-                  sizes="(min-width: 1024px) 55vw, 100vw"
-                  className={`h-full w-full object-cover ${
-                    isHoverable() && !isZoomed ? 'group-hover:scale-[1.03]' : ''
-                  }`}
-                  loading={activeIndex === 0 ? 'eager' : 'lazy'}
-                  style={{transition: 'transform 700ms ease'}}
-                />
-              ) : null}
-            </div>
+            {/* Cinematic Crossfade */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeIndex}
+                initial={{opacity: 0, scale: 1.02}}
+                animate={{opacity: 1, scale: 1}}
+                exit={{opacity: 0}}
+                transition={{duration: 0.6, ease: [0.16, 1, 0.3, 1]}}
+                className="absolute inset-0 h-full w-full"
+              >
+                <div
+                  className="h-full w-full"
+                  style={{
+                    transform: isZoomed ? 'scale(2.5)' : 'scale(1)',
+                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                    transition: 'transform 1000ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
+                  <Image
+                    data={allImages[activeIndex]}
+                    alt={allImages[activeIndex]?.altText || productTitle}
+                    sizes="(min-width: 1024px) 55vw, 100vw"
+                    className="h-full w-full object-cover transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                    loading={activeIndex === 0 ? 'eager' : 'lazy'}
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>
 
             {/* Arrows */}
             {allImages.length > 1 && (
@@ -188,10 +206,10 @@ export function ProductImage({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); goPrev(); }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm opacity-0 shadow-lg transition-all duration-200 hover:bg-white hover:scale-105 group-hover:opacity-100 active:scale-95"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md opacity-0 shadow-lg transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-110 hover:bg-white group-hover:opacity-100"
                   aria-label="Previous image"
                 >
-                  <svg className="h-4 w-4 text-[#1B2A3D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="h-4 w-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                   </svg>
                 </button>
@@ -199,17 +217,17 @@ export function ProductImage({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); goNext(); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm opacity-0 shadow-lg transition-all duration-200 hover:bg-white hover:scale-105 group-hover:opacity-100 active:scale-95"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md opacity-0 shadow-lg transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-110 hover:bg-white group-hover:opacity-100"
                   aria-label="Next image"
                 >
-                  <svg className="h-4 w-4 text-[#1B2A3D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="h-4 w-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </button>
               </>
             )}
 
-            {/* Expand Button */}
+            {/* Expand / Lightbox Button */}
             <button
               type="button"
               onClick={(e) => {
@@ -217,101 +235,79 @@ export function ProductImage({
                 setLightboxOpen(true);
                 setIsZoomed(false);
               }}
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm opacity-0 shadow-md transition-all duration-200 hover:bg-white group-hover:opacity-100"
+              className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-md opacity-0 shadow-md transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-110 hover:bg-white group-hover:opacity-100"
               aria-label="Expand image"
             >
-              <svg className="h-4 w-4 text-[#1B2A3D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="h-4 w-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
               </svg>
             </button>
 
             {/* Mobile Counter */}
             {allImages.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-3 py-1.5 text-[11px] font-medium tracking-wider text-white backdrop-blur-sm lg:hidden">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-[10px] font-bold tracking-[0.2em] text-white backdrop-blur-md lg:hidden">
                 {activeIndex + 1} / {allImages.length}
               </div>
             )}
           </div>
-
-          {/* Mobile Dots */}
-          {allImages.length > 1 && (
-            <div className="mt-3 flex items-center justify-center gap-1.5 lg:hidden">
-              {allImages.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  className={`rounded-full transition-all duration-300 ${
-                    activeIndex === i
-                      ? 'h-1.5 w-6 bg-[#1B2A3D]'
-                      : 'h-1.5 w-1.5 bg-[#1B2A3D]/20'
-                  }`}
-                  aria-label={`Go to image ${i + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Lightbox */}
-      {lightboxOpen && (
-        <ImageLightbox
-          images={allImages}
-          activeIndex={activeIndex}
-          onClose={() => setLightboxOpen(false)}
-          onNext={goNext}
-          onPrev={goPrev}
-          productTitle={productTitle}
-        />
-      )}
+      {/* Fullscreen Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxOpen && (
+          <ImageLightbox
+            images={allImages}
+            activeIndex={activeIndex}
+            onClose={() => setLightboxOpen(false)}
+            onNext={goNext}
+            onPrev={goPrev}
+            productTitle={productTitle}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
-/* ─── Helper ─── */
-function isHoverable() {
-  // Check if device supports hover (not touchscreen primarily)
-  if (typeof window === 'undefined') return true;
-  return window.matchMedia('(hover: hover)').matches;
-}
-
-/* ─── Lightweight Lightbox (No extra libs) ─── */
+/* ═══════════════════════════════════════════════════════════════
+   LIGHTBOX (Framer Motion Immersive Experience)
+   ═══════════════════════════════════════════════════════════════ */
 function ImageLightbox({images, activeIndex, onClose, onNext, onPrev, productTitle}) {
   const [idx, setIdx] = useState(activeIndex);
 
-  // Sync with parent props when opened
-  useEffect(() => {
-    setIdx(activeIndex);
-  }, [activeIndex]);
+  useEffect(() => { setIdx(activeIndex); }, [activeIndex]);
 
-  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95"
+    <motion.div
+      initial={{opacity: 0}}
+      animate={{opacity: 1}}
+      exit={{opacity: 0}}
+      transition={{duration: 0.4, ease: [0.16, 1, 0.3, 1]}}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-2xl"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
-      {/* Close */}
+      {/* Close Button */}
       <button
         type="button"
         onClick={onClose}
-        className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center text-white/70 hover:text-white transition-colors rounded-full hover:bg-white/10"
+        className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:scale-110 hover:bg-white hover:text-black"
         aria-label="Close"
       >
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
 
-      {/* Counter */}
-      <div className="absolute left-1/2 top-6 -translate-x-1/2 text-sm font-light tracking-wider text-white/60">
+      {/* Top Counter */}
+      <div className="absolute left-1/2 top-8 -translate-x-1/2 text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
         {idx + 1} / {images.length}
       </div>
 
@@ -321,10 +317,10 @@ function ImageLightbox({images, activeIndex, onClose, onNext, onPrev, productTit
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setIdx((p) => (p - 1 + images.length) % images.length); onPrev(); }}
-            className="absolute left-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors md:left-8"
+            className="absolute left-6 top-1/2 z-10 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white/5 text-white/70 transition-all hover:scale-110 hover:bg-white hover:text-black md:left-12"
             aria-label="Previous"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
@@ -332,53 +328,59 @@ function ImageLightbox({images, activeIndex, onClose, onNext, onPrev, productTit
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setIdx((p) => (p + 1) % images.length); onNext(); }}
-            className="absolute right-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors md:right-8"
+            className="absolute right-6 top-1/2 z-10 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white/5 text-white/70 transition-all hover:scale-110 hover:bg-white hover:text-black md:right-12"
             aria-label="Next"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </button>
         </>
       )}
 
-      {/* Image Display */}
-      <div
-        className="max-h-[85vh] w-full max-w-4xl px-16 md:px-20"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex h-full w-full items-center justify-center">
-          <Image
-            data={images[idx]}
-            alt={`${productTitle} - View ${idx + 1}`}
-            sizes="80vw"
-            className="max-h-[85vh] max-w-full object-contain"
-          />
-        </div>
+      {/* Main Image Display */}
+      <div className="max-h-[85vh] w-full max-w-5xl px-12 md:px-24" onClick={(e) => e.stopPropagation()}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={idx}
+            initial={{opacity: 0, scale: 0.98}}
+            animate={{opacity: 1, scale: 1}}
+            exit={{opacity: 0}}
+            transition={{duration: 0.5, ease: [0.16, 1, 0.3, 1]}}
+            className="flex h-full w-full items-center justify-center"
+          >
+            <Image
+              data={images[idx]}
+              alt={`${productTitle} - View ${idx + 1}`}
+              sizes="80vw"
+              className="max-h-[80vh] max-w-full object-contain"
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Thumbnails Strip */}
+      {/* Bottom Thumbnail Strip */}
       {images.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-3" onClick={(e) => e.stopPropagation()}>
           {images.slice(0, 8).map((img, i) => (
             <button
               key={img?.id || i}
               type="button"
-              onClick={(e) => { e.stopPropagation(); setIdx(i); }}
-              className={`h-14 w-12 overflow-hidden rounded-sm transition-all cursor-pointer ${
-                i === idx ? 'ring-2 ring-white opacity-100' : 'opacity-40 hover:opacity-70'
+              onClick={() => { setIdx(i); if (i > idx) onNext(); else onPrev(); }}
+              className={`h-16 w-12 overflow-hidden rounded-md transition-all duration-300 cursor-pointer ${
+                i === idx ? 'ring-1 ring-white ring-offset-4 ring-offset-black opacity-100 scale-110' : 'opacity-40 hover:opacity-100'
               }`}
             >
               {img ? (
-                <Image data={img} alt="" sizes="48px" className="h-full w-full object-cover" />
+                <Image data={img} sizes="48px" className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-[#333]" />
+                <div className="h-full w-full bg-white/10" />
               )}
             </button>
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

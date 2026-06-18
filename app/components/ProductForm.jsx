@@ -1,6 +1,7 @@
 import {Link, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
+import {motion} from 'framer-motion';
 
 /**
  * @param {{
@@ -23,138 +24,143 @@ export function ProductForm({
   const safeQuantity = Math.max(1, Number(quantity) || 1);
 
   return (
-    <div className={`product-form flex flex-col ${hideOptions ? 'gap-3' : 'gap-6'}`}>
+    <div className={`flex flex-col ${hideOptions ? 'gap-0' : 'gap-8'}`}>
       {!hideOptions &&
-        productOptions.map((option) => {
+        productOptions.map((option, index) => {
           if (option.optionValues.length === 1) return null;
 
           return (
-            <div className="product-options" key={option.name}>
-              <h5
-                className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1B2A3D]/55"
-                style={{fontFamily: 'sans-serif'}}
-              >
+            <motion.div
+              key={option.name}
+              initial={{opacity: 0, y: 10}}
+              animate={{opacity: 1, y: 0}}
+              transition={{duration: 0.4, delay: index * 0.1, ease: [0.16, 1, 0.3, 1]}}
+            >
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-black">
                 {option.name}
-              </h5>
+              </p>
 
-              <div className="product-options-grid flex flex-wrap gap-2.5">
-                {option.optionValues.map((value) => {
-                  const {
-                    name,
-                    handle,
-                    variantUriQuery,
-                    selected,
-                    available,
-                    exists,
-                    isDifferentProduct,
-                    swatch,
-                  } = value;
-
-                  const baseClasses =
-                    'product-options-item inline-flex items-center justify-center transition-all';
-
-                  if (isDifferentProduct) {
-                    return (
-                      <Link
-                        className={baseClasses}
-                        key={option.name + name}
-                        prefetch="intent"
-                        preventScrollReset
-                        replace
-                        to={`/products/${handle}?${variantUriQuery}`}
-                        data-selected={selected ? 'true' : 'false'}
-                        style={{
-                          opacity: available ? 1 : 0.35,
-                        }}
-                      >
-                        <ProductOptionSwatch swatch={swatch} name={name} />
-                      </Link>
-                    );
-                  }
-
-                  return (
-                    <button
-                      type="button"
-                      className={baseClasses}
-                      key={option.name + name}
-                      aria-checked={selected ? 'true' : 'false'}
-                      data-selected={selected ? 'true' : 'false'}
-                      disabled={!exists}
-                      style={{
-                        opacity: available ? 1 : 0.35,
-                      }}
-                      onClick={() => {
-                        if (!selected) {
-                          void navigate(`?${variantUriQuery}`, {
-                            replace: true,
-                            preventScrollReset: true,
-                          });
-                        }
-                      }}
-                    >
-                      <ProductOptionSwatch swatch={swatch} name={name} />
-                    </button>
-                  );
-                })}
+              <div className="flex flex-wrap gap-3">
+                {option.optionValues.map((value) => (
+                  <OptionButton
+                    key={option.name + value.name}
+                    value={value}
+                    navigate={navigate}
+                  />
+                ))}
               </div>
-            </div>
+            </motion.div>
           );
         })}
 
-      <div className={hideOptions ? 'mt-0' : 'mt-2'}>
+      <motion.div
+        initial={{opacity: 0, y: 10}}
+        animate={{opacity: 1, y: 0}}
+        transition={{duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1]}}
+        className={hideOptions ? 'mt-0' : 'mt-4'}
+      >
         <AddToCartButton
           disabled={!selectedVariant || !isAvailable}
-          onClick={() => {
-            open('cart');
-          }}
+          onClick={() => open('cart')}
           lines={
             selectedVariant
-              ? [
-                  {
-                    merchandiseId: selectedVariant.id,
-                    quantity: safeQuantity,
-                    selectedVariant,
-                  },
-                ]
+              ? [{merchandiseId: selectedVariant.id, quantity: safeQuantity, selectedVariant}]
               : []
           }
         >
           {isAvailable ? 'Add to Cart' : 'Sold Out'}
         </AddToCartButton>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
 /**
- * @param {{
- *   swatch?: Maybe<ProductOptionValueSwatch> | undefined;
- *   name: string;
- * }}
+ * Handles the individual option buttons (Colors vs Text/Sizes)
  */
-function ProductOptionSwatch({swatch, name}) {
-  const image = swatch?.image?.previewImage?.url;
-  const color = swatch?.color;
+function OptionButton({value, navigate}) {
+  const {name, handle, variantUriQuery, selected, available, exists, isDifferentProduct, swatch} = value;
+  const isColor = Boolean(swatch?.color || swatch?.image);
 
-  if (!image && !color) {
-    return <span>{name}</span>;
+  const handleClick = (e) => {
+    if (isDifferentProduct) return; // Let the <Link> handle it
+    e.preventDefault();
+    if (!selected && exists) {
+      navigate(`?${variantUriQuery}`, {replace: true, preventScrollReset: true});
+    }
+  };
+
+  const Wrapper = isDifferentProduct ? Link : 'button';
+  const wrapperProps = isDifferentProduct
+    ? {
+        to: `/products/${handle}?${variantUriQuery}`,
+        prefetch: 'intent',
+        replace: true,
+        preventScrollReset: true,
+      }
+    : {
+        type: 'button',
+        disabled: !exists,
+        onClick: handleClick,
+        'aria-checked': selected,
+      };
+
+  // Color Swatch UI
+  if (isColor) {
+    const swatchImage = swatch?.image?.previewImage?.url;
+    const swatchColor = swatch?.color || 'transparent';
+    const lightColor = isLightColor(swatchColor);
+
+    return (
+      <Wrapper
+        {...wrapperProps}
+        title={name}
+        className={`relative flex items-center justify-center rounded-full p-[2px] border transition-all duration-300 ${
+          selected ? 'border-black scale-110' : 'border-transparent hover:border-gray-300 hover:scale-110'
+        } ${!available ? 'opacity-40' : ''}`}
+      >
+        <span
+          className={`block h-8 w-8 rounded-full ${lightColor && !swatchImage ? 'border border-black/10' : ''}`}
+          style={{
+            background: swatchImage ? `url(${swatchImage}) center/cover` : swatchColor,
+          }}
+        />
+      </Wrapper>
+    );
   }
 
+  // Text/Size UI
   return (
-    <span
-      aria-label={name}
-      title={name}
-      className="product-option-label-swatch"
-      style={{
-        backgroundColor: color || 'transparent',
-      }}
+    <Wrapper
+      {...wrapperProps}
+      className={`relative flex h-12 min-w-[3rem] items-center justify-center rounded-full px-5 text-[11px] font-bold tracking-[0.1em] transition-all duration-300 ${
+        selected
+          ? 'scale-105 bg-black text-white shadow-md'
+          : available
+            ? 'border border-gray-200 bg-white text-black hover:border-black hover:bg-gray-50'
+            : 'cursor-not-allowed border border-gray-100 bg-gray-50 text-gray-400'
+      }`}
     >
-      {image ? <img src={image} alt={name} /> : null}
-    </span>
+      {name}
+      {!available && (
+        <span className="absolute left-1/2 top-1/2 h-px w-[60%] -translate-x-1/2 -translate-y-1/2 rotate-[-25deg] bg-gray-400" />
+      )}
+    </Wrapper>
   );
 }
 
+/**
+ * Helper to determine if a hex color is light (needs a border)
+ */
+function isLightColor(color = '') {
+  if (!color.startsWith('#')) return false;
+  let hex = color.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map((char) => char + char).join('');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 155;
+}
+
 /** @typedef {import('@shopify/hydrogen').MappedProductOptions} MappedProductOptions */
-/** @typedef {import('@shopify/hydrogen/storefront-api-types').Maybe} Maybe */
-/** @typedef {import('@shopify/hydrogen/storefront-api-types').ProductOptionValueSwatch} ProductOptionValueSwatch */
 /** @typedef {import('storefrontapi.generated').ProductFragment} ProductFragment */
